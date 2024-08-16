@@ -73,19 +73,26 @@ public class WeightController
         var productId = AnsiConsole.Ask<int>("Enter the [bold yellow]product Id[/]:");
         var minMaxWeight = AskMinMaxWeight();
 
-        var result = await _mediator.Send(new WeightToleranceCheckQuery(productId, minMaxWeight.minWeight, minMaxWeight.maxWeight));
+        try
+        {
+            var result = await _mediator.Send(new WeightToleranceCheckQuery(productId, minMaxWeight.minWeight, minMaxWeight.maxWeight));
 
-        if (result.IsSuccess && result.Value)
-        {
-            AnsiConsole.Write(new FigletText("Product weight approved").Centered().Color(Color.Green));
+            if (result.IsSuccess && result.Value)
+            {
+                AnsiConsole.Write(new FigletText("Product weight approved").Centered().Color(Color.Green));
+            }
+            else if (result.IsNotFound())
+            {
+                AnsiConsole.Write(new FigletText("Product not found!").Centered().Color(Color.Yellow));
+            }
+            else
+            {
+                AnsiConsole.Write(new FigletText("Product weight denied!").Centered().Color(Color.Red));
+            }
         }
-        else if (result.IsNotFound())
+        catch (Exception ex)
         {
-            AnsiConsole.Write(new FigletText("Product not found!").Centered().Color(Color.Yellow));
-        }
-        else
-        {
-            AnsiConsole.Write(new FigletText("Product weight approved").Centered().Color(Color.Red));
+            AnsiConsole.Write(new FigletText(ex.Message).Centered().Color(Color.Red));
         }
     }
 
@@ -93,9 +100,15 @@ public class WeightController
     {
         var minMaxWeight = AskMinMaxWeight();
 
-        var result = await _mediator.Send(new FilterByWeightQuery(minMaxWeight.minWeight, minMaxWeight.maxWeight));
-
-        ShowProductsTable(result);
+        try
+        {
+            var result = await _mediator.Send(new FilterByWeightQuery(minMaxWeight.minWeight, minMaxWeight.maxWeight));
+            ShowProductsTable(result);
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.Write(new FigletText(ex.Message).Centered().Color(Color.Red));
+        }
     }
 
     private (double minWeight, double maxWeight) AskMinMaxWeight()
